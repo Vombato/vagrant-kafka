@@ -1,0 +1,40 @@
+---
+- hosts: all
+  become: true
+  tasks:
+
+  - name: Disable SELinux
+    selinux:
+      state: disabled
+
+  - name: Remove swapfile from /etc/fstab
+    mount:
+      name: "{{ item }}"
+      fstype: swap
+      state: absent
+    with_items:
+      - swap
+      - none
+
+  - name: Disable swap
+    command: swapoff -a
+    when: ansible_swaptotal_mb > 0
+  
+  - name: Stop and disable firewalld.
+    service:
+      name: firewalld
+      state: stopped
+      enabled: False
+    become: yes
+
+  - name: Installing openjdk
+    yum:
+      name: "java-1.8.0-openjdk"
+      state: latest
+      update_cache: yes
+    become: yes
+
+  - name: Add user to root group
+    user:
+      name: user
+      group: root

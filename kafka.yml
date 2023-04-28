@@ -1,0 +1,54 @@
+---
+- hosts: all
+  become: true
+  tasks:
+
+  - name: Add kafka user
+    user:
+      name: "kafka"
+      shell: /sbin/nologin
+    become: yes
+
+
+  - name: Downloading kafka distrib
+    get_url:
+      url: http://mirror.cogentco.com/pub/apache/kafka/3.4.0/kafka_2.12-3.4.0.tgz
+      dest: /tmp/
+  
+  - name: Unarchive kafka distrib
+    unarchive:
+      src: /tmp/kafka_2.12-3.4.0.tgz
+      dest: /opt/
+      remote_src: yes
+    become: yes
+  
+  - name: Change owner kafka folder
+    file:
+      path: /opt/kafka_2.12-3.4.0
+      owner: "kafka"
+      group: "kafka"
+      recurse: yes
+    become: yes
+
+  - name: Create symlink to kafka folder
+    file:
+      src: /opt/kafka_2.12-3.4.0
+      dest: /opt/kafka
+      owner: "kafka"
+      group: "kafka"
+      state: link
+    become: yes
+
+  - name: Creating work directory
+    file:
+      path: "/kafka"
+      owner: "kafka"
+      group: "kafka"
+      state: directory
+      mode: '0740'
+    become: yes    
+
+  - name: Deleteing distrib file
+    file:
+      path: /tmp/kafka_2.12-3.4.0.tgz
+      state: absent
